@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Guru {
+  id                 String   @id
+  name               Json
+  era                String
+  country            String
+  lineage            Json
+  discipleOf         Json
+  photoUrl           String
+  summary            Json
+  biography          Json
+  birthDate          String
+  deathDate          String
+  birthPlace         Json
+  majorContributions Json
+  timeline           Json
+  teachings          Json
+  relatedAshramIds   String[]
+  relatedEventIds    String[]
+}
+
+model Ashram {
+  id               String   @id
+  name             Json
+  coverUrl         String
+  galleryUrls      String[]
+  establishedDate  String
+  builtByGuruId    String
+  purpose          Json
+  description      Json
+  country          String
+  state            String
+  city             String
+  latitude         Float
+  longitude        Float
+  dailySchedule    Json
+  facilities       Json
+  contactEmail     String
+  contactPhone     String
+  upcomingEventIds String[]
+  residentGuruIds  String[]
+}
+
+model Event {
+  id                 String   @id
+  name               Json
+  description        Json
+  date               String
+  time               String
+  location           Json
+  imageUrl           String
+  isActive           Boolean
+  galleryUrls        String[]
+  ticketPrice        Float
+  availableTickets   Int
+  registrationsCount Int      @default(0)
+}
+
+model Product {
+  id          String          @id
+  name        Json
+  description Json
+  category    String
+  price       Float
+  imageUrl    String
+  isAvailable Boolean
+  stock       Int
+  rating      Float           @default(5)
+  reviews     ProductReview[]
+}
+
+model ProductReview {
+  id        String  @id
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userName  String
+  rating    Int
+  comment   String
+  date      String
+}
+
+model Blog {
+  id          String @id
+  title       Json
+  summary     Json
+  content     Json
+  author      String
+  publishDate String
+  readTime    String
+  imageUrl    String
+}
+
+model Testimonial {
+  id         String @id
+  name       String
+  avatarUrl  String
+  experience Json
+  rating     Float
+  country    String
+}
+
+model User {
+  id                 String   @id
+  name               String
+  email              String   @unique
+  phone              String?
+  role               String
+  passwordHash       String?
+  savedEventIds      String[]
+  wishlistProductIds String[]
+  shippingAddress    Json?
+  orders             Order[]
+}
+
+model Order {
+  id              String  @id
+  userId          String
+  user            User    @relation(fields: [userId], references: [id])
+  items           Json
+  subtotal        Float
+  couponCode      String?
+  discount        Float
+  total           Float
+  shippingAddress Json
+  paymentStatus   String
+  orderStatus     String
+  trackingNumber  String?
+  orderDate       String
+}
+
+model HomepageData {
+  id           String @id @default("singleton")
+  appName      Json
+  ashramSlogan Json
+  heroSlides   Json
+}
+
+model AboutUsData {
+  id                 String @id @default("singleton")
+  aboutUsTitle       Json
+  aboutUsSub         Json
+  aboutUsDescription Json
+  aboutUsBgUrl       String
+}
