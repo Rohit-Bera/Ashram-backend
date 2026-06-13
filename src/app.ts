@@ -22,9 +22,13 @@ export function createApp() {
     }
   }))
 
-  // CORS for frontend dev server
+  // CORS
   app.use((_req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+    const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
+    const origin = _req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
     res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (_req.method === 'OPTIONS') return res.sendStatus(200);

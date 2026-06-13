@@ -12,6 +12,8 @@ export default async function handler(req: any, res: any) {
       connected = true;
     } catch (e) {
       console.error('Prisma connect error:', e);
+      res.status(503).json({ error: 'Database unavailable' });
+      return;
     }
   }
   app(req, res);

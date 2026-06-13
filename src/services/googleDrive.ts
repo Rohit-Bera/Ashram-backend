@@ -15,11 +15,18 @@ function loadCredentials() {
   throw new Error('Google Drive credentials not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON or GOOGLE_SERVICE_ACCOUNT_PATH.');
 }
 
-const auth = new google.auth.GoogleAuth({
-  credentials: loadCredentials(),
-  scopes: ['https://www.googleapis.com/auth/drive'],
-});
-const drive = google.drive({ version: 'v3', auth });
+let _drive: ReturnType<typeof google.drive> | null = null;
+
+function getDrive() {
+  if (!_drive) {
+    const auth = new google.auth.GoogleAuth({
+      credentials: loadCredentials(),
+      scopes: ['https://www.googleapis.com/auth/drive'],
+    });
+    _drive = google.drive({ version: 'v3', auth });
+  }
+  return _drive;
+}
 
 // Cache folder IDs to avoid repeated Drive API lookups
 const folderCache = new Map<string, string>();
@@ -29,7 +36,7 @@ async function ensureFolder(parentId: string, name: string): Promise<string> {
   const cached = folderCache.get(cacheKey);
   if (cached) return cached;
 
-  const { data } = await drive.files.list({
+  const { data } = await getDrive().files.list({
     q: `mimeType='application/vnd.google-apps.folder' and name='${name}' and '${parentId}' in parents and trashed=false`,
     fields: 'files(id)',
     spaces: 'drive',
@@ -39,7 +46,7 @@ async function ensureFolder(parentId: string, name: string): Promise<string> {
 
   let folderId = data.files?.[0]?.id;
   if (!folderId) {
-    const { data: created } = await drive.files.create({
+    const { data: created } = await getDrive().files.create({
       requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
       fields: 'id',
       supportsAllDrives: true,
@@ -68,7 +75,7 @@ export async function uploadToGoogleDrive(
   const folderId = await getEntityFolder(entity, mediaType);
   const safeName = path.basename(decodeURIComponent(originalName));
 
-  const { data } = await drive.files.create({
+  const { data } = await getDrive().files.create({
     requestBody: { name: safeName, parents: [folderId], mimeType },
     media: { mimeType, body: Readable.from(buffer) },
     fields: 'id',
@@ -77,7 +84,7 @@ export async function uploadToGoogleDrive(
 
   const fileId = data.id!;
 
-  await drive.permissions.create({
+  await getDrive().permissions.create({
     fileId,
     requestBody: { role: 'reader', type: 'anyone' },
     supportsAllDrives: true,
