@@ -1,11 +1,8 @@
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_FILE = path.join(__dirname, '../../data/translations.json');
+const DATA_FILE = path.join(process.cwd(), 'data/translations.json');
 
 const DEFAULT_TRANSLATIONS: Record<string, Record<string, string>> = {
   appName: { en: 'Sri Divine Heritage', hi: 'श्री दिव्य विरासत', gu: 'શ્રી દિવ્ય વિરાસત', bn: 'শ্রী দিব্য ঐতিহ্য' },
