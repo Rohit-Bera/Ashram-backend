@@ -1,22 +1,30 @@
 import { Router } from 'express';
 import { upload } from '../middleware/multerConfig.js';
-import { uploadToCloudinary } from '../services/cloudinary.js';
-import type { ImagePreset } from '../services/cloudinary.js';
+import { uploadToR2 } from '../services/r2.js';
+import type { R2Entity } from '../services/r2.js';
 
 const router = Router();
 
+const VALID_ENTITIES: R2Entity[] = ['gurus', 'ashrams', 'events', 'products', 'blogs', 'testimonials', 'about'];
+
 router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ success: false, message: 'No image file provided' });
+    return res.status(400).json({ success: false, message: 'No file provided' });
   }
 
-  const preset = (req.query.type as ImagePreset) || 'thumbnail';
-  const validPresets: ImagePreset[] = ['hero', 'gallery', 'thumbnail', 'avatar'];
-  const safePreset = validPresets.includes(preset) ? preset : 'thumbnail';
+  const entity = req.query.entity as R2Entity;
+  if (!entity || !VALID_ENTITIES.includes(entity)) {
+    return res.status(400).json({ success: false, message: `Missing or invalid ?entity= param. Must be one of: ${VALID_ENTITIES.join(', ')}` });
+  }
 
   try {
-    const { url, publicId } = await uploadToCloudinary(req.file.buffer, safePreset);
-    res.json({ success: true, url, key: publicId });
+    const { url, key } = await uploadToR2(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      entity
+    );
+    res.json({ success: true, url, key });
   } catch (err: any) {
     console.error('Upload error:', err);
     res.status(500).json({ success: false, message: 'Upload failed: ' + err.message });
