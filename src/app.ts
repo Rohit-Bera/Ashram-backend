@@ -37,15 +37,6 @@ export function createApp() {
 
   app.use('/api', apiRouter);
 
-  // Production: serve built frontend
-  if (process.env.NODE_ENV === 'production') {
-    const distPath = path.join(process.cwd(), '..', 'frontend', 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
-
   app.use(errorHandler);
 
   return app;
